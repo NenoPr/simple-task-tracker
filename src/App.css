@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+.create-task-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.task-input {
+  padding: 0.5rem;
+  background-color: aliceblue;
+  width: 70%;
+  align-self: center;
+}
+
+button {
+  padding: 0.2rem;
+  border: 0.2rem solid black;
+  border-radius: 0.5rem;
+  width: fit-content;
+  align-self: center;
+}
+
+button:hover {
+  background-color: black;
+  color: white;
+  cursor: pointer;
+}
+
+.tasks-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 50%;
+  align-self: center;
+}
+
+.task-container {
+  display: flex;
+  flex-direction: row;
+  align-self: center;
+  width: 100%;
+  justify-content: space-between;
+  background-color: burlywood;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  border: 0.1rem solid black;
+}
+
+.task-completed {
+  background-color: aquamarine;
+}
+
+.task-actions {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+}
+
+.check-image {
+  width: 2rem;
+  cursor: pointer;
+}
