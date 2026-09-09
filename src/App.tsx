@@ -8,9 +8,16 @@ type Task = {
   completed: boolean;
 };
 
+type editText = {
+  id: string;
+  edit: boolean;
+};
+
 function App() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [newTask, setNewTask] = useState<string>("");
+  const [editTextBool, setEditTextBool] = useState<editText | null>();
+  const [editText, setEditText] = useState<string>();
 
   const createTask = () => {
     if (newTask === "") return;
@@ -23,7 +30,7 @@ function App() {
     setNewTask("");
   };
 
-  const updateCompletion = (taskID) => {
+  const updateCompletion = (taskID: string) => {
     setTasks((prev) =>
       prev.map((currentTask) =>
         currentTask.id === taskID
@@ -33,8 +40,21 @@ function App() {
     );
   };
 
-  const deleteTask = (taskID) => {
+  const deleteTask = (taskID: string) => {
     setTasks((prev) => prev.filter((currentTask) => currentTask.id !== taskID));
+  };
+
+  const editTask = (taskID) => {
+    if (editText === undefined) return;
+    setTasks((prev) =>
+      prev.map((currentTask) =>
+        currentTask.id === taskID
+          ? { ...currentTask, text: editText }
+          : currentTask,
+      ),
+    );
+    setEditTextBool(null);
+    setEditText("");
   };
 
   return (
@@ -52,30 +72,62 @@ function App() {
       </div>
       <div className="tasks-container">
         {tasks &&
-          tasks.map((task) => (
-            <div
-              className={`task-container ${task.completed === true ? "task-completed" : ""}`}
-              key={task.id}
-            >
-              <div>{task.text}</div>
-              <div className="task-actions">
-                <img
-                  src={
-                    task.completed
-                      ? "../src/assets/checked.svg"
-                      : "../src/assets/unchecked.svg"
-                  }
-                  className="check-image"
-                  onClick={() => updateCompletion(task.id)}
-                ></img>
-                <img
-                  src={"../src/assets/trash.svg"}
-                  className="check-image"
-                  onClick={() => deleteTask(task.id)}
-                ></img>
+          tasks.map((task) =>
+            editTextBool?.edit && editTextBool.id === task.id ? (
+              <div
+                className={`task-container ${task.completed === true ? "task-completed" : ""}`}
+                key={task.id}
+              >
+                <input
+                  value={editText ?? ""}
+                  onChange={(e) => setEditText(e.target.value)}
+                  className="bg-amber-50 rounded-sm w-180"
+                ></input>
+                <div className="task-actions">
+                  <div onClick={() => editTask(task.id)}>Save</div>
+                  <div
+                    onClick={() => {
+                      setEditTextBool(null);
+                      setEditText("");
+                    }}
+                  >
+                    Cancel
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            ) : (
+              <div
+                className={`task-container ${task.completed === true ? "task-completed" : ""}`}
+                key={task.id}
+              >
+                <div>{task.text}</div>
+                <div className="task-actions">
+                  <img
+                    src={
+                      task.completed
+                        ? "../src/assets/checked.svg"
+                        : "../src/assets/unchecked.svg"
+                    }
+                    className="check-image"
+                    onClick={() => updateCompletion(task.id)}
+                  ></img>
+                  <img
+                    src="../src/assets/edit.svg"
+                    className="check-image"
+                    onClick={() => {
+                      (setEditTextBool({ id: task.id, edit: true }),
+                        setEditText(task.text));
+                    }}
+                  ></img>
+                  <img
+                    src={"../src/assets/trash.svg"}
+                    className="check-image"
+                    onClick={() => deleteTask(task.id)}
+                  ></img>
+                </div>
+              </div>
+            ),
+          )}
       </div>
     </>
   );
