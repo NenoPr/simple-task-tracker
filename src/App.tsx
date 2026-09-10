@@ -17,7 +17,8 @@ function App() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [newTask, setNewTask] = useState<string>("");
   const [editTextBool, setEditTextBool] = useState<editText | null>();
-  const [editText, setEditText] = useState<string>();
+  const [editText, setEditText] = useState<string>("");
+  const [filterTasks, setFilterTasks] = useState<string>("all");
 
   const createTask = () => {
     if (newTask === "") return;
@@ -44,7 +45,7 @@ function App() {
     setTasks((prev) => prev.filter((currentTask) => currentTask.id !== taskID));
   };
 
-  const editTask = (taskID) => {
+  const editTask = (taskID: string) => {
     if (editText === undefined) return;
     setTasks((prev) =>
       prev.map((currentTask) =>
@@ -56,6 +57,13 @@ function App() {
     setEditTextBool(null);
     setEditText("");
   };
+
+  const filteredTasks =
+    filterTasks === "active"
+      ? tasks.filter((task) => task.completed !== true)
+      : filterTasks === "completed"
+        ? tasks.filter((task) => task.completed === true)
+        : tasks;
 
   return (
     <>
@@ -70,9 +78,14 @@ function App() {
         ></textarea>
         <button onClick={createTask}>Create Task</button>
       </div>
+      <div className="filter-container">
+        <button onClick={() => setFilterTasks("all")}>All</button>
+        <button onClick={() => setFilterTasks("active")}>Active</button>
+        <button onClick={() => setFilterTasks("completed")}>Completed</button>
+      </div>
       <div className="tasks-container">
         {tasks &&
-          tasks.map((task) =>
+          filteredTasks.map((task) =>
             editTextBool?.edit && editTextBool.id === task.id ? (
               <div
                 className={`task-container ${task.completed === true ? "task-completed" : ""}`}
