@@ -6,6 +6,7 @@ type Task = {
   id: string;
   text: string;
   completed: boolean;
+  priority: string;
 };
 
 type editText = {
@@ -19,6 +20,9 @@ function App() {
   const [editTextBool, setEditTextBool] = useState<editText | null>();
   const [editText, setEditText] = useState<string>("");
   const [filterTasks, setFilterTasks] = useState<string>("all");
+  const [filterPriority, setFilterPriority] = useState<string>("all");
+  const [taskPriority, setTaskPriority] = useState<string>("low");
+  const [updatePriority, setUpdatePriority] = useState<string>("");
 
   const createTask = () => {
     if (newTask === "") return;
@@ -26,6 +30,7 @@ function App() {
       id: uuidv4(),
       text: newTask,
       completed: false,
+      priority: taskPriority,
     };
     setTasks((task) => [...task, addTask]);
     setNewTask("");
@@ -50,7 +55,7 @@ function App() {
     setTasks((prev) =>
       prev.map((currentTask) =>
         currentTask.id === taskID
-          ? { ...currentTask, text: editText }
+          ? { ...currentTask, text: editText, priority: updatePriority }
           : currentTask,
       ),
     );
@@ -58,12 +63,28 @@ function App() {
     setEditText("");
   };
 
-  const filteredTasks =
-    filterTasks === "active"
-      ? tasks.filter((task) => task.completed !== true)
-      : filterTasks === "completed"
-        ? tasks.filter((task) => task.completed === true)
-        : tasks;
+  const handleTaskPriority = (priority: string) => {
+    setTaskPriority(priority);
+  };
+
+  // const filteredTasks =
+  //   filterTasks === "active"
+  //     ? tasks.filter((task) => task.completed !== true)
+  //     : filterTasks === "completed"
+  //       ? tasks.filter((task) => task.completed === true)
+  //       : tasks;
+
+  const filteredTasks = tasks.filter((task) => {
+    const matchesStatus =
+      filterTasks === "all" ||
+      (filterTasks === "active" && !task.completed) ||
+      (filterTasks === "completed" && task.completed);
+
+    const matchesPriority =
+      filterPriority === "all" || task.priority === filterPriority;
+
+    return matchesStatus && matchesPriority;
+  });
 
   return (
     <>
@@ -76,12 +97,35 @@ function App() {
           value={newTask}
           onChange={(e) => setNewTask(e.target.value)}
         ></textarea>
+        <span>
+          Priority:
+          <select
+            name=""
+            id=""
+            className="priority-selection"
+            onChange={(e) => handleTaskPriority(e.target.value)}
+          >
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+          </select>
+        </span>
         <button onClick={createTask}>Create Task</button>
       </div>
       <div className="filter-container">
         <button onClick={() => setFilterTasks("all")}>All</button>
         <button onClick={() => setFilterTasks("active")}>Active</button>
         <button onClick={() => setFilterTasks("completed")}>Completed</button>
+        <select
+          name=""
+          id=""
+          onChange={(e) => setFilterPriority(e.target.value)}
+        >
+          <option value="all">All</option>
+          <option value="low">Low</option>
+          <option value="medium">Medium</option>
+          <option value="high">High</option>
+        </select>
       </div>
       <div className="tasks-container">
         {tasks &&
@@ -106,6 +150,14 @@ function App() {
                   >
                     Cancel
                   </div>
+                  <select
+                    value={updatePriority}
+                    onChange={(e) => setUpdatePriority(e.target.value)}
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                  </select>
                 </div>
               </div>
             ) : (
@@ -113,7 +165,7 @@ function App() {
                 className={`task-container ${task.completed === true ? "task-completed" : ""}`}
                 key={task.id}
               >
-                <div>{task.text}</div>
+                <div className="items-center">{task.text}</div>
                 <div className="task-actions">
                   <img
                     src={
@@ -129,7 +181,8 @@ function App() {
                     className="check-image"
                     onClick={() => {
                       (setEditTextBool({ id: task.id, edit: true }),
-                        setEditText(task.text));
+                        setEditText(task.text),
+                        setUpdatePriority(task.priority));
                     }}
                   ></img>
                   <img
@@ -137,6 +190,11 @@ function App() {
                     className="check-image"
                     onClick={() => deleteTask(task.id)}
                   ></img>
+                  <div
+                    className={`${task.priority === "low" ? "bg-green-400" : task.priority === "medium" ? "bg-yellow-400" : "bg-red-600"} w-20 rounded-2xl`}
+                  >
+                    {task.priority}
+                  </div>
                 </div>
               </div>
             ),
