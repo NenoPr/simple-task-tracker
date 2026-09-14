@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./App.css";
 import { v4 as uuidv4 } from "uuid";
 
@@ -24,44 +24,137 @@ function App() {
   const [taskPriority, setTaskPriority] = useState<string>("low");
   const [updatePriority, setUpdatePriority] = useState<string>("");
 
-  const createTask = () => {
-    if (newTask === "") return;
-    const addTask = {
-      id: uuidv4(),
-      text: newTask,
-      completed: false,
-      priority: taskPriority,
+  useEffect(() => {
+    const loadTasks = async () => {
+      const response = await fetch("http://localhost:3000/api/tasks");
+      const data = await response.json();
+
+      console.log(data);
+      setTasks(data);
     };
-    setTasks((task) => [...task, addTask]);
+
+    loadTasks();
+  }, []);
+
+  const createTask = async () => {
+    if (newTask === "") return;
+
+    const response = await fetch("http://localhost:3000/api/tasks", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        text: newTask,
+        priority: taskPriority,
+      }),
+    });
+
+    const createdTask = await response.json();
+
+    setTasks((prev) => [...prev, createdTask]);
     setNewTask("");
   };
 
-  const updateCompletion = (taskID: string) => {
+  // const createTask = () => {
+  //   if (newTask === "") return;
+  //   const addTask = {
+  //     id: uuidv4(),
+  //     text: newTask,
+  //     completed: false,
+  //     priority: taskPriority,
+  //   };
+  //   setTasks((task) => [...task, addTask]);
+  //   setNewTask("");
+  // };
+
+  const updateCompletion = async (taskID: string) => {
+    const task = tasks.find((task) => task.id === taskID);
+
+    if (!task) return;
+
+    const response = await fetch(
+      `http://localhost:3000/api/tasks/${taskID}/completed`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          completed: !task.completed,
+        }),
+      },
+    );
+
+    const updatedTask = await response.json();
+
     setTasks((prev) =>
-      prev.map((currentTask) =>
-        currentTask.id === taskID
-          ? { ...currentTask, completed: !currentTask.completed }
-          : currentTask,
-      ),
+      prev.map((task) => (task.id === updatedTask.id ? updatedTask : task)),
     );
   };
 
-  const deleteTask = (taskID: string) => {
-    setTasks((prev) => prev.filter((currentTask) => currentTask.id !== taskID));
+  // const updateCompletion = (taskID: string) => {
+  //   setTasks((prev) =>
+  //     prev.map((currentTask) =>
+  //       currentTask.id === taskID
+  //         ? { ...currentTask, completed: !currentTask.completed }
+  //         : currentTask,
+  //     ),
+  //   );
+  // };
+
+  const deleteTask = async (taskID: string) => {
+    const response = await fetch(`http://localhost:3000/api/tasks/${taskID}`, {
+      method: "DELETE",
+    });
+
+    if (!response.ok) return;
+
+    setTasks((prev) => prev.filter((task) => task.id !== taskID));
   };
 
-  const editTask = (taskID: string) => {
-    if (editText === undefined) return;
+  // const deleteTask = (taskID: string) => {
+  //   setTasks((prev) => prev.filter((currentTask) => currentTask.id !== taskID));
+  // };
+
+  const editTask = async (taskID: string) => {
+    if (editText.trim() === "") return;
+
+    const response = await fetch(`http://localhost:3000/api/tasks/${taskID}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        text: editText,
+        priority: updatePriority,
+      }),
+    });
+
+    if (!response.ok) return;
+
+    const updatedTask = await response.json();
+
     setTasks((prev) =>
-      prev.map((currentTask) =>
-        currentTask.id === taskID
-          ? { ...currentTask, text: editText, priority: updatePriority }
-          : currentTask,
-      ),
+      prev.map((task) => (task.id === updatedTask.id ? updatedTask : task)),
     );
+
     setEditTextBool(null);
     setEditText("");
   };
+
+  // const editTask = (taskID: string) => {
+  //   if (editText === undefined) return;
+  //   setTasks((prev) =>
+  //     prev.map((currentTask) =>
+  //       currentTask.id === taskID
+  //         ? { ...currentTask, text: editText, priority: updatePriority }
+  //         : currentTask,
+  //     ),
+  //   );
+  //   setEditTextBool(null);
+  //   setEditText("");
+  // };
 
   const handleTaskPriority = (priority: string) => {
     setTaskPriority(priority);
@@ -191,7 +284,7 @@ function App() {
                     onClick={() => deleteTask(task.id)}
                   ></img>
                   <div
-                    className={`${task.priority === "low" ? "bg-green-400" : task.priority === "medium" ? "bg-yellow-400" : "bg-red-600"} w-20 rounded-2xl`}
+                    className={`${task.priority === "low" ? "bg-green-400" : task.priority === "medium" ? "bg-yellow-400" : "bg-red-600"} w-20 rounded-2xl font-bold`}
                   >
                     {task.priority}
                   </div>
