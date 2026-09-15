@@ -7,6 +7,7 @@ type Task = {
   text: string;
   completed: boolean;
   priority: string;
+  due_date: string | null;
 };
 
 type editText = {
@@ -23,6 +24,8 @@ function App() {
   const [filterPriority, setFilterPriority] = useState<string>("all");
   const [taskPriority, setTaskPriority] = useState<string>("low");
   const [updatePriority, setUpdatePriority] = useState<string>("");
+  const [newDate, setNewDate] = useState<string>("");
+  const [editNewDate, setEditNewDate] = useState<string>("");
 
   useEffect(() => {
     const loadTasks = async () => {
@@ -47,6 +50,7 @@ function App() {
       body: JSON.stringify({
         text: newTask,
         priority: taskPriority,
+        due_date: newDate,
       }),
     });
 
@@ -128,6 +132,7 @@ function App() {
       body: JSON.stringify({
         text: editText,
         priority: updatePriority,
+        due_date: editNewDate,
       }),
     });
 
@@ -141,6 +146,7 @@ function App() {
 
     setEditTextBool(null);
     setEditText("");
+    setEditNewDate("");
   };
 
   // const editTask = (taskID: string) => {
@@ -203,9 +209,18 @@ function App() {
             <option value="high">High</option>
           </select>
         </span>
+        <div>
+          <span>Due Date: </span>
+          <input
+            type="date"
+            value={newDate}
+            onChange={(e) => setNewDate(e.target.value)}
+          />
+        </div>
         <button onClick={createTask}>Create Task</button>
       </div>
-      <div className="filter-container">
+      <hr />
+      <div className="filter-container mt-5">
         <button onClick={() => setFilterTasks("all")}>All</button>
         <button onClick={() => setFilterTasks("active")}>Active</button>
         <button onClick={() => setFilterTasks("completed")}>Completed</button>
@@ -220,6 +235,7 @@ function App() {
           <option value="high">High</option>
         </select>
       </div>
+
       <div className="tasks-container">
         {tasks &&
           filteredTasks.map((task) =>
@@ -251,6 +267,11 @@ function App() {
                     <option value="medium">Medium</option>
                     <option value="high">High</option>
                   </select>
+                  <input
+                    type="date"
+                    value={editNewDate}
+                    onChange={(e) => setEditNewDate(e.target.value)}
+                  />
                 </div>
               </div>
             ) : (
@@ -275,7 +296,14 @@ function App() {
                     onClick={() => {
                       (setEditTextBool({ id: task.id, edit: true }),
                         setEditText(task.text),
-                        setUpdatePriority(task.priority));
+                        setUpdatePriority(task.priority),
+                        setEditNewDate(
+                          task.due_date
+                            ? new Date(task.due_date)
+                                .toISOString()
+                                .split("T")[0]
+                            : "",
+                        ));
                     }}
                   ></img>
                   <img
@@ -287,6 +315,11 @@ function App() {
                     className={`${task.priority === "low" ? "bg-green-400" : task.priority === "medium" ? "bg-yellow-400" : "bg-red-600"} w-20 rounded-2xl font-bold`}
                   >
                     {task.priority}
+                  </div>
+                  <div className="w-25">
+                    {task.due_date
+                      ? new Date(task.due_date).toLocaleDateString()
+                      : "No due Date"}
                   </div>
                 </div>
               </div>

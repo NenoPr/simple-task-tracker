@@ -1,6 +1,9 @@
 import express from "express";
 import cors from "cors";
 import pg from "pg";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const { Pool } = pg;
 
@@ -35,15 +38,15 @@ app.get("/api/tasks", async (req, res) => {
 
 app.post("/api/tasks", async (req, res) => {
   try {
-    const { text, priority } = req.body;
+    const { text, priority, due_date } = req.body;
 
     const result = await pool.query(
       `
-      INSERT INTO tasks (id, text, completed, priority)
-      VALUES (gen_random_uuid(), $1, false, $2)
+      INSERT INTO tasks (id, text, completed, priority, due_date)
+      VALUES (gen_random_uuid(), $1, false, $2, $3)
       RETURNING *
       `,
-      [text, priority],
+      [text, priority, due_date || null],
     );
 
     res.status(201).json(result.rows[0]);
@@ -97,17 +100,18 @@ app.delete("/api/tasks/:id", async (req, res) => {
 app.put("/api/tasks/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { text, priority } = req.body;
+    const { text, priority, due_date } = req.body;
 
     const result = await pool.query(
       `
       UPDATE tasks
       SET text = $1,
-          priority = $2
-      WHERE id = $3
+          priority = $2,
+          due_date = $3
+      WHERE id = $4
       RETURNING *
       `,
-      [text, priority, id],
+      [text, priority, due_date || null, id],
     );
 
     res.json(result.rows[0]);
